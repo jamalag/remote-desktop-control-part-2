@@ -130,6 +130,7 @@ const createWindow = () => {
             types: ['screen']
             // types: ['window', 'screen']
         }).then(sources => {
+            sendSelectedScreen(sources[0])
             availableScreens = sources
             createTray()
             // for (const source of sources) {
