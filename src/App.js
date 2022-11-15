@@ -82,7 +82,7 @@ function App() {
       })
     })
 
-    socket.on('anwer', answerSDP => {
+    socket.on('answer', answerSDP => {
       console.log('received answer')
       rtcPeerConnection.current.setRemoteDescription(
         new RTCSessionDescription(answerSDP)
@@ -96,8 +96,8 @@ function App() {
     })
 
     rtcPeerConnection.current.onicecandidate = (e) => {
-      if (e.icecandidate)
-        socket.emit('icecandidate', e.icecandidate)
+      if (e.candidate)
+        socket.emit('icecandidate', e.candidate)
     }
 
     rtcPeerConnection.current.oniceconnectionstatechange = (e) => {
