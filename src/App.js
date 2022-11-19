@@ -1,9 +1,9 @@
 import './App.css';
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 
 import io from 'socket.io-client'
 
-const socket = io('https://1010-2607-fea8-bde2-400-d953-3179-37f8-9a82.ngrok.io/remote-ctrl')
+const socket = io('https://e8e6-2607-fea8-bde2-400-755b-a04e-53f6-19fa.ngrok.io/remote-ctrl')
 
 function App() {
   const videoRef = useRef()
@@ -15,7 +15,19 @@ function App() {
     ]
   }))
 
-  const handleStream = (stream) => {
+  const [selectedScreen, _setSelectedScreen] = useState(1)
+  const selectedScreenRef = useRef(selectedScreen)
+
+  const setSelectedScreen = newSelectedScreen => {
+    selectedScreenRef.current = newSelectedScreen
+    _setSelectedScreen(newSelectedScreen)
+  }
+
+  const handleStream = (selectedScreen, stream) => {
+
+    setSelectedScreen(selectedScreen)
+
+    socket.emit('selectedScreen', selectedScreen)
     // const { width, height } = stream.getVideoTracks()[0].getSettings()
 
     // window.electronAPI.setSize({ width, height })
@@ -44,19 +56,19 @@ function App() {
 
   useEffect(() => {
 
-    const getStream = async (screenId) => {
+    const getStream = async (selectedScreen) => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
           video: {
             mandatory: {
               chromeMediaSource: 'desktop',
-              chromeMediaSourceId: screenId,
+              chromeMediaSourceId: selectedScreen.id,
             }
           }
         })
 
-        handleStream(stream)
+        handleStream(selectedScreen, stream)
 
       } catch (e) {
         console.log(e)
@@ -109,14 +121,38 @@ function App() {
       videoRef.current.onloadedmetadata = (e) => videoRef.current.play()
     }
 
+    socket.on('selectedScreen', selectedScreen => {
+      setSelectedScreen(selectedScreen)
+    })
+
   }, [])
 
+  const handleMouseClick = (e) => socket.emit('mouse_click', {})
+
+  const handleMouseMove = ({
+    clientX, clientY
+  }) => {
+    socket.emit('mouse_move', {
+      clientX, clientY,
+      clientWidth: window.innerWidth,
+      clientHeight: window.innerHeight,
+    })
+  }
 
   return (
     <div className="App">
       <>
-        <span>800x600</span>
-        <video ref={videoRef} className="video">video not available</video>
+        <div
+          style={{
+            display: 'block',
+            backgroundColor: 'black',
+            margin: 0,
+          }}
+          onMouseMove={handleMouseMove}
+          onClick={handleMouseClick}
+        >
+          <video ref={videoRef} className="video">video not available</video>
+        </div>
       </>
     </div>
   );
